@@ -27,7 +27,7 @@ const queryIonic = async (query: string) => {
 export async function POST(req: Request) {
   const json = await req.json()
   const { messages, previewToken } = json
-  const userId = (await auth())?.user.id
+  const userId = (await auth())?.user.id || 'any-user-id'
 
   if (!userId) {
     return new Response('Unauthorized', {
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
     messages.push(responseMessage); // extend conversation with assistant's reply
     for (const toolCall of toolCalls) {
       const functionName = toolCall.function.name;
-      const functionToCall = availableFunctions[functionName];
+      const functionToCall = availableFunctions[functionName as keyof typeof availableFunctions];
       const functionArgs = JSON.parse(toolCall.function.arguments);
       console.log({ functionName, functionArgs })
       const functionResponse = await functionToCall(functionArgs.query);
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
   })
 
   const stream = OpenAIStream(res, {
-    async onCompletion(completion) {
+    async onCompletion(completion: any) {
       // const choice = json.choices[0]
       // console.log({ choice })
       const title = json.messages[0].content.substring(0, 100)
